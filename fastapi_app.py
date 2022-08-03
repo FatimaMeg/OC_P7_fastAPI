@@ -6,6 +6,7 @@ from fastapi import FastAPI
 from Model import Features, Client
 import joblib
 import pickle
+from lime import lime_tabular
 
 # 2. Create app and model objects
 app = FastAPI()
