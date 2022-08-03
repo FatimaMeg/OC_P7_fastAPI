@@ -24,6 +24,11 @@ file_features = open("features.pkl", "rb")
 features = pickle.load(file_features)
 file_features.close()
 
+# On a besoin du fichier de données 'train' pour obtenir les explanations de lime, récupéré au format pickle
+file_X_train = open("X_train_Nono2.pkl", "rb")
+donnees_train = pickle.load(file_X_train)
+file_X_train.close()
+
 # 3. Expose the prediction functionality, make a prediction from the passed
 #    JSON data and return the predicted classification (yes or not) with the confidence
 @app.post('/predict')
