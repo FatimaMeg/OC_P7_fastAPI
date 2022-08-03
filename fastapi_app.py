@@ -42,6 +42,23 @@ def predict_clientscoring_features(client: Client):
 		'Sa probabilite de faillite est de ': f"{proba[0][1]*100:.2f} %"
     }
 
+@app.post('/lime')
+def explain_lime(client: Client):
+    # On récupère les features du client
+    data = donnees_clients.loc[donnees_clients['SK_ID_CURR'] == client.num_client, features]
+    explainer = lime_tabular.LimeTabularExplainer(donnees_train, mode="classification", class_names=features)
+    exp = explainer.explain_instance(data.values[0],
+                                     model_pipeline.predict_proba, num_features=20)
+    mongraph_html = exp.as_html(predict_proba=False, show_predicted_value=False)
+    #import streamlit.components.v1 as components
+    #components.html(mongraph_html, height=1000)
+
+    #st.pyplot(exp.as_pyplot_figure())
+
+    return {
+        mongraph_html
+    }
+
 
 @app.get("/")
 async def main():
