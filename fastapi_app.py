@@ -69,7 +69,7 @@ async def main():
     <p> Proceed to initialize the Streamlit UI (frontend/app.py) to submit prediction requests </p>
     </body>
     """
-    return ("Bienvenue dans mon API")
+    return ("Bienvenue dans mon API avec lime")
 
 # 4. Run the API with uvicorn
 #    Will run on http://127.0.0.1:8000
