@@ -7,16 +7,25 @@ from Model import Features, Client
 import joblib
 import pickle
 from lime import lime_tabular
+from fastapi.encoders import jsonable_encoder
+
 
 # 2. Create app and model objects
 app = FastAPI()
 
-# On charge notre modèle de prévision
+# 3. On récupère tous les éléments liés à notre modèle de prévision : pipeline, données clients...
+# On charge le pipeline
 model_pipeline = joblib.load('pipeline_bank_lgbm.joblib')
 
-# On récupère notre fichier clients pour obtenir les informations descriptives des clients
+# On récupère notre fichier clients pour obtenir les informations categorielles des clients
 file_clients = open("fichierClient.pkl", "rb")
+#file_clients = open("application_test.pkl", "rb") #fichier client avec les noms de colonne
 donnees_clients = pickle.load(file_clients)
+file_clients.close()
+
+# On récupère notre fichier clients pour obtenir les informations descriptives des clients
+file_clients_descr = open("application_test.pkl", "rb") #fichier client avec les noms de colonne
+donnees_clients_descr = pickle.load(file_clients_descr)
 file_clients.close()
 
 # On récupère nos features calculées par le modèle au format pkl
@@ -29,24 +38,36 @@ file_X_train = open("X_train_Nono2.pkl", "rb")
 donnees_train = pickle.load(file_X_train)
 file_X_train.close()
 
-# 3. Expose the prediction functionality, make a prediction from the passed
-#    JSON data and return the predicted classification (yes or not) with the confidence
-@app.post('/predict')
+
+# 4. On décrit ici les différents endpoints de notre API
+
+@app.post('/client')  # endpoint pour vérifier si le numéro client existe dans la base de données client
+def client_recherche(client: Client):
+    client_existe = donnees_clients.loc[donnees_clients['SK_ID_CURR'] == client.num_client]
+    return {
+        not client_existe.empty
+    }
+
+@app.post('/clientdata')  # endpoint pour récupérer les données du client
+def client_data(client: Client):
+    info_client = donnees_clients_descr.loc[donnees_clients_descr['SK_ID_CURR'] == client.num_client, ['NAME_CONTRACT_TYPE','CODE_GENDER']]
+
+    return {
+        info_client.values[0][0], info_client.values[0][1]
+    }
+
+@app.post('/predict')  # endpoint pour obtenir la prévision
 def predict_clientscoring_features(client: Client):
     # On récupère les features du client
     data = donnees_clients.loc[donnees_clients['SK_ID_CURR'] == client.num_client, features]
     prediction = model_pipeline.predict(data)[0]
     proba = model_pipeline.predict_proba(data)
 
-    if prediction > 0.5:
-        prediction_text = "OUI"
-    else:
-        prediction_text = "NON"
-
     return {
-        'Le client risque-t-il la faillite' : prediction_text,\
-		'Sa probabilite de faillite est de ': f"{proba[0][1]*100:.2f} %"
+        prediction, proba[0][1]
+        #'Sa probabilite de faillite est de ': f"{proba[0][1] * 100:.2f} %"
     }
+
 
 @app.post('/lime')
 def explain_lime(client: Client):
@@ -54,12 +75,9 @@ def explain_lime(client: Client):
     data = donnees_clients.loc[donnees_clients['SK_ID_CURR'] == client.num_client, features]
     explainer = lime_tabular.LimeTabularExplainer(donnees_train, mode="classification", class_names=features)
     exp = explainer.explain_instance(data.values[0],
-                                     model_pipeline.predict_proba, num_features=20)
-    mongraph_html = exp.as_html(predict_proba=True, show_predicted_value=False)
-    #import streamlit.components.v1 as components
-    #components.html(mongraph_html, height=1000)
-
-    #st.pyplot(exp.as_pyplot_figure())
+                                     model_pipeline.predict_proba, num_features=21)
+    mongraph_html = exp.as_html(predict_proba=False, show_predicted_value=False)
+    #Reste à faire : comment afficher les predict_proba et predicted_value dans le html, pour l'instant bug
 
     return {
         mongraph_html
@@ -76,6 +94,7 @@ async def main():
     </body>
     """
     return ("Bienvenue dans mon API avec lime")
+
 
 # 4. Run the API with uvicorn
 #    Will run on http://127.0.0.1:8000

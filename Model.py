@@ -10,7 +10,7 @@ import pickle
 
 # 2. Classes which describes the client and the features
 class Client(BaseModel):
-    num_client: float
+    num_client: int
 
 
 class Features(BaseModel):
