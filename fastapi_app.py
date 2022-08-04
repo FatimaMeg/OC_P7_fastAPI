@@ -55,7 +55,7 @@ def explain_lime(client: Client):
     explainer = lime_tabular.LimeTabularExplainer(donnees_train, mode="classification", class_names=features)
     exp = explainer.explain_instance(data.values[0],
                                      model_pipeline.predict_proba, num_features=20)
-    mongraph_html = exp.as_html(predict_proba=False, show_predicted_value=False)
+    mongraph_html = exp.as_html(predict_proba=True, show_predicted_value=False)
     #import streamlit.components.v1 as components
     #components.html(mongraph_html, height=1000)
 
