@@ -23,11 +23,6 @@ file_clients = open("fichierClient.pkl", "rb")
 donnees_clients = pickle.load(file_clients)
 file_clients.close()
 
-# On récupère notre fichier clients pour obtenir les informations descriptives des clients
-file_clients_descr = open("application_test.pkl", "rb") #fichier client avec les noms de colonne
-donnees_clients_descr = pickle.load(file_clients_descr)
-file_clients.close()
-
 # On récupère nos features calculées par le modèle au format pkl
 file_features = open("features.pkl", "rb")
 features = pickle.load(file_features)
@@ -46,14 +41,6 @@ def client_recherche(client: Client):
     client_existe = donnees_clients.loc[donnees_clients['SK_ID_CURR'] == client.num_client]
     return {
         not client_existe.empty
-    }
-
-@app.post('/clientdata')  # endpoint pour récupérer les données du client
-def client_data(client: Client):
-    info_client = donnees_clients_descr.loc[donnees_clients_descr['SK_ID_CURR'] == client.num_client, ['NAME_CONTRACT_TYPE','CODE_GENDER']]
-
-    return {
-        info_client.values[0][0], info_client.values[0][1]
     }
 
 @app.post('/predict')  # endpoint pour obtenir la prévision
