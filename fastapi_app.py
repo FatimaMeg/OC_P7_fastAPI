@@ -1,4 +1,4 @@
-# FastAPI application
+# FastAPI application deployed with Heroku
 
 # 1. Library imports
 import uvicorn
