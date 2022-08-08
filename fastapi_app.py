@@ -15,6 +15,12 @@ import pickle
 from lime import lime_tabular
 from fastapi.encoders import jsonable_encoder
 import json
+from bokeh.plotting import figure, show
+from bokeh.models import ColumnDataSource
+from bokeh import layouts
+from bokeh.layouts import gridplot
+import pandas as pd
+import numpy as np
 
 
 # 2. Create app and model objects
@@ -85,6 +91,99 @@ def client_recherche(client : Client):
 
     return {
         json.dumps(parsed, indent=4)
+    }
+
+@app.post('/graphs')  # endpoint pour obtenir les graphiques du client
+def client_graphs(client : Client):
+    client_donnees = donnees_clients.loc[donnees_clients['SK_ID_CURR'] == client.num_client, :]
+    
+    n_bins = 20  
+    graph=[]
+
+    j=0
+    for i in features:
+        j=j+1
+        arr_hist = "arr_hist"+str(j)
+        edges = "edges"+str(j)
+        h = "h"+str(j)
+        arr_hist, edges = np.histogram(donnees_clients[i], bins = n_bins, 
+                                            range = [donnees_clients[i].min(),donnees_clients[i].max()])
+    
+        hist = pd.DataFrame({i: arr_hist, 
+                            'left': edges[:-1], 
+                        'right': edges[1:]})
+
+        h = figure(plot_height = 600, plot_width = 600, 
+                            title = i, 
+                            x_axis_label = i, 
+                            y_axis_label = 'Nombre')
+
+        h.quad(bottom=0, top=hist[i],
+                            left=hist['left'], right=hist['right'], 
+                            fill_color='blue', line_color='black')
+            
+        graph.append(h)
+    #st.bokeh_chart(gridplot([graph],width=250, height=250) )
+    
+    import jinja2
+    from bokeh.embed import components, json_item
+
+    template = jinja2.Template("""
+    <!DOCTYPE html>
+    <html lang="en-US">
+
+    <link
+        href="http://cdn.pydata.org/bokeh/dev/bokeh-0.13.0.min.css"
+        rel="stylesheet" type="text/css"
+    >
+    <script 
+        src="http://cdn.pydata.org/bokeh/dev/bokeh-0.13.0.min.js"
+    ></script>
+
+    <body>
+
+        <h1>Hello Bokeh!</h1>
+    
+        <p> Below is a simple plot of stock closing prices </p>
+    
+        {{ script }}
+    
+        {{ div }}
+
+    </body>
+
+    </html>
+    """)
+
+    arr_hist0, edges0 = np.histogram(donnees_clients['EXT_SOURCE_2'], bins = n_bins, 
+                                             range = [donnees_clients['EXT_SOURCE_2'].min(),donnees_clients['EXT_SOURCE_2'].max()])
+        
+    hist0 = pd.DataFrame({'EXT_SOURCE_2': arr_hist0, 
+                             'left': edges[:-1], 
+                            'right': edges[1:]})
+
+    h0 = figure(plot_height = 600, plot_width = 600, 
+                             title = 'EXT_SOURCE_2', 
+                             x_axis_label = 'EXT_SOURCE_2', 
+                             y_axis_label = 'Nombre')
+
+    h0.quad(bottom=0, top=hist0['EXT_SOURCE_2'],
+                             left=hist0['left'], right=hist0['right'], 
+                             fill_color='blue', line_color='black')
+    
+    script, div = components(h0)
+
+    p = figure()
+    x=[1,2,3]
+    y=[4,5,6]
+    p.circle(x, y)
+
+    item_text = json.dumps(json_item(p, "myplot"))
+
+    return {
+        #template.render(script=script, div=div)
+        item_text
+        
     }
 
 
