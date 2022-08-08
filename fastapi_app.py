@@ -1,5 +1,11 @@
 # FastAPI application deployed with Heroku
 
+# =========================================
+# API pour l'octroi de crédits bancaires
+# Author: Fatima Meguellati
+# Last Modified: 08 Aout 2022
+# =========================================
+
 # 1. Library imports
 import uvicorn
 from fastapi import FastAPI
@@ -8,6 +14,7 @@ import joblib
 import pickle
 from lime import lime_tabular
 from fastapi.encoders import jsonable_encoder
+import json
 
 
 # 2. Create app and model objects
@@ -17,9 +24,9 @@ app = FastAPI()
 # On charge le pipeline
 model_pipeline = joblib.load('pipeline_bank_lgbm.joblib')
 
-# On récupère notre fichier clients pour obtenir les informations categorielles des clients
+# On récupère notre fichier clients de prévisions
 file_clients = open("fichierClient.pkl", "rb")
-#file_clients = open("application_test.pkl", "rb") #fichier client avec les noms de colonne
+#file_clients = open("application_test.pkl", "rb") #fichier client initial
 donnees_clients = pickle.load(file_clients)
 file_clients.close()
 
@@ -37,7 +44,7 @@ file_X_train.close()
 # 4. On décrit ici les différents endpoints de notre API
 
 @app.post('/client')  # endpoint pour vérifier si le numéro client existe dans la base de données client
-def client_recherche(client: Client):
+def client_recherche(client : Client):
     client_existe = donnees_clients.loc[donnees_clients['SK_ID_CURR'] == client.num_client]
     return {
         not client_existe.empty
@@ -60,14 +67,24 @@ def predict_clientscoring_features(client: Client):
 def explain_lime(client: Client):
     # On récupère les features du client
     data = donnees_clients.loc[donnees_clients['SK_ID_CURR'] == client.num_client, features]
-    explainer = lime_tabular.LimeTabularExplainer(donnees_train, mode="classification", class_names=features)
+    explainer = lime_tabular.LimeTabularExplainer(donnees_train, mode="classification", feature_names=features)
     exp = explainer.explain_instance(data.values[0],
-                                     model_pipeline.predict_proba, num_features=21)
-    mongraph_html = exp.as_html(predict_proba=False, show_predicted_value=False)
+                                     model_pipeline.predict_proba, num_features=20)
+    mongraph_html = exp.as_html()
     #Reste à faire : comment afficher les predict_proba et predicted_value dans le html, pour l'instant bug
 
     return {
         mongraph_html
+    }
+
+@app.post('/clientdata')  # endpoint pour obtenir les données descriptives du client
+def client_recherche(client : Client):
+    client_donnees = donnees_clients.loc[donnees_clients['SK_ID_CURR'] == client.num_client, :]
+    result = client_donnees.to_json(orient="records")
+    parsed = json.loads(result)
+
+    return {
+        json.dumps(parsed, indent=4)
     }
 
 
