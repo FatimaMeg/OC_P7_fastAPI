@@ -1,12 +1,7 @@
 # Model pour l'API
 
 # 1. Library imports
-from turtle import st
-import pandas as pd
-from sklearn.ensemble import RandomForestClassifier
 from pydantic import BaseModel
-import joblib
-import pickle
 
 
 # 2. Classes which describes the client and the features
