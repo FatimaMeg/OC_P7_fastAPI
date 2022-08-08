@@ -8,6 +8,4 @@ fastapi==0.78.0
 pandas==1.4.2
 requests==2.24.0
 uvicorn==0.15.0
-json5
-jsonpickle==2.2.0
-jsonschema
+json
