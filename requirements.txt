@@ -11,3 +11,4 @@ uvicorn==0.15.0
 json5
 jsonpickle==2.2.0
 jsonschema
+fastapi.encoders
