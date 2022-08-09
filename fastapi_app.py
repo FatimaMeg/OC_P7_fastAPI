@@ -31,7 +31,7 @@ app = FastAPI()
 model_pipeline = joblib.load('pipeline_bank_lgbm.joblib')
 
 # On récupère notre fichier clients de prévisions
-file_clients = open("fichierClient.pkl", "rb")
+file_clients = open("clients_test_pred.pkl", "rb")
 #file_clients = open("application_test.pkl", "rb") #fichier client initial
 donnees_clients = pickle.load(file_clients)
 file_clients.close()
@@ -42,7 +42,7 @@ features = pickle.load(file_features)
 file_features.close()
 
 # On a besoin du fichier de données 'train' pour obtenir les explanations de lime, récupéré au format pickle
-file_X_train = open("X_train_Nono2.pkl", "rb")
+file_X_train = open("X_train.pkl", "rb")
 donnees_train = pickle.load(file_X_train)
 file_X_train.close()
 
