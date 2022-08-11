@@ -71,10 +71,10 @@ def predict_clientscoring_features(client: Client):
     # On récupère les features du client
     data = donnees_clients.loc[donnees_clients['SK_ID_CURR'] == client.num_client, features]
     prediction = model_pipeline.predict(data)[0]
-    proba = model_pipeline.predict_proba(data)
+    #proba = model_pipeline.predict_proba(data)
 
     return {
-        prediction, proba[0][1]
+        prediction
         #'Sa probabilite de faillite est de ': f"{proba[0][1] * 100:.2f} %"
     }
 
