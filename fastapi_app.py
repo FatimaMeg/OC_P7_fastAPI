@@ -9,7 +9,7 @@
 # 1. Library imports
 import uvicorn
 from fastapi import FastAPI
-from Model import Features, Client
+#from Model import Features, Client
 import joblib
 import pickle
 from lime import lime_tabular
@@ -21,10 +21,14 @@ from bokeh import layouts
 from bokeh.layouts import gridplot
 import pandas as pd
 import numpy as np
-
+from pydantic import BaseModel
 
 # 2. Create app and model objects
 app = FastAPI()
+
+# 2.1 On crée un modele de données clients
+class Client(BaseModel):
+    num_client: int
 
 # 3. On récupère tous les éléments liés à notre modèle de prévision : pipeline, données clients...
 # On charge le pipeline
