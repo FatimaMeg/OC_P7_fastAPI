@@ -30,6 +30,12 @@ app = FastAPI()
 # On charge le pipeline
 model_pipeline = joblib.load('pipeline_bank_lgbm.joblib')
 
+# On récupère notre fichier clients de donnees descriptives
+file_clients_descr = open("clients_test_descr.pkl", "rb")
+donnees_clients_descr = pickle.load(file_clients_descr)
+file_clients_descr.close()
+
+
 # On récupère notre fichier clients de prévisions
 file_clients = open("clients_test_pred.pkl", "rb")
 #file_clients = open("application_test.pkl", "rb") #fichier client initial
@@ -85,7 +91,7 @@ def explain_lime(client: Client):
 
 @app.post('/clientdata')  # endpoint pour obtenir les données descriptives du client
 def client_recherche(client : Client):
-    client_donnees = donnees_clients.loc[donnees_clients['SK_ID_CURR'] == client.num_client, :]
+    client_donnees = donnees_clients_descr.loc[donnees_clients_descr['SK_ID_CURR'] == client.num_client, :]
     result = client_donnees.to_json(orient="records")
     parsed = json.loads(result)
 
