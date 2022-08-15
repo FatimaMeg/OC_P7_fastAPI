@@ -31,8 +31,8 @@ class Client(BaseModel):
     num_client: int
 
 class Prev(BaseModel):
-    score: int
-    prev_faillite: float
+    resultat: int
+    score: float
 
 
 # 3. On récupère tous les éléments liés à notre modèle de prévision : pipeline, données clients...
@@ -78,7 +78,7 @@ def predict_clientscoring_features(client: Client):
     proba = model_pipeline.predict_proba(data)
 
     return {
-        "score": prediction, "prev_faillite": proba[0][1]
+        "resultat": prediction, "score": proba[0][1]
     }
 
 
