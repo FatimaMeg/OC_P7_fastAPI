@@ -26,9 +26,14 @@ from pydantic import BaseModel
 # 2. Create app and model objects
 app = FastAPI()
 
-# 2.1 On crée un modele de données clients
+# 2.1 On crée un modele de données clients et un modèle de données prévisions
 class Client(BaseModel):
     num_client: int
+
+class Prev(BaseModel):
+    score: int
+    prev_faillite: float
+
 
 # 3. On récupère tous les éléments liés à notre modèle de prévision : pipeline, données clients...
 # On charge le pipeline
@@ -56,7 +61,6 @@ file_X_train = open("X_train.pkl", "rb")
 donnees_train = pickle.load(file_X_train)
 file_X_train.close()
 
-
 # 4. On décrit ici les différents endpoints de notre API
 
 @app.post('/client')  # endpoint pour vérifier si le numéro client existe dans la base de données client
@@ -66,16 +70,15 @@ def client_recherche(client : Client):
         not client_existe.empty
     }
 
-@app.post('/predict')  # endpoint pour obtenir la prévision
+@app.post('/predict', response_model=Prev)  # endpoint pour obtenir la prévision
 def predict_clientscoring_features(client: Client):
     # On récupère les features du client
     data = donnees_clients.loc[donnees_clients['SK_ID_CURR'] == client.num_client, features]
     prediction = model_pipeline.predict(data)[0]
-    #proba = model_pipeline.predict_proba(data)
+    proba = model_pipeline.predict_proba(data)
 
     return {
-        prediction
-        #'Sa probabilite de faillite est de ': f"{proba[0][1] * 100:.2f} %"
+        "score": prediction, "prev_faillite": proba[0][1]
     }
 
 
@@ -103,7 +106,7 @@ def client_recherche(client : Client):
         json.dumps(parsed, indent=4)
     }
 
-@app.post('/graphs')  # endpoint pour obtenir les graphiques du client
+@app.post('/graphs')  # endpoint pour obtenir les graphiques du client, finalement non implémenté
 def client_graphs(client : Client):
     client_donnees = donnees_clients.loc[donnees_clients['SK_ID_CURR'] == client.num_client, :]
     
